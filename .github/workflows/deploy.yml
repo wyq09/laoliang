@@ -1,7 +1,9 @@
 # ─────────────────────────────────────────────────────────────
 #  laoliang 自动部署 + 定价同步
-#  触发: push main / 手动 / 每 5 分钟同步一次官方价格
+#  触发: push main / 手动 / 每 15 分钟同步一次官方价格 (备份)
 #  服务器保持纯 Nginx 静态托管，不依赖 Node 或浏览器运行时
+#  注: 价格刷新主力是服务器本地 systemd timer laoliang-pricing.timer (每5分钟),
+#      此处 schedule 仅作冗余备份 (GitHub Actions 对公开仓库的 schedule 触发不可靠)
 #
 #  需要的 Secrets (仓库 Settings → Secrets and variables → Actions):
 #   - DEPLOY_SSH_KEY   : 部署专用 SSH 私钥 (ed25519, 本地生成的那把)
@@ -19,7 +21,7 @@ on:
     branches: [main]
   workflow_dispatch: {}
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/15 * * * *"
 
 concurrency:
   group: deploy-laoliang
