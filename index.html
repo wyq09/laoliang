@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#15100d" />
+    <meta name="description" content="老梁|滑动变祖器|DeepSeek" />
+    <title>滑动变祖器</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317120f'/%3E%3Cpath d='M10 20h44M10 44h44' stroke='%23c89349' stroke-width='5'/%3E%3Ccircle cx='36' cy='20' r='9' fill='%23eee9d3' stroke='%23c89349' stroke-width='4'/%3E%3Cpath d='M36 28v16' stroke='%23c89349' stroke-width='4'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="滑动变阻器首页">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>滑动变祖器</span>
+      </a>
+      <div class="top-actions">
+        <button class="save-button" id="saveButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
+          <span>保存图片</span>
+        </button>
+        <button class="sound-button" id="soundButton" type="button" aria-pressed="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.7 9H3v6h3.7l4.3 4V5Zm4.7 3.2a5.3 5.3 0 0 1 0 7.6M18.4 5.5a9 9 0 0 1 0 13"/></svg>
+          <span>机械音效</span>
+        </button>
+        <button class="edit-button" id="editButton" type="button" aria-expanded="false" aria-controls="customPanel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H2V9.55h.4A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2h4.05v.4A1.7 1.7 0 0 0 15 4.1a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.4 8.5c.16.39.36.72.6 1 .3.3.68.4 1.1.4h.4v4.05h-.4a1.7 1.7 0 0 0-1.7 1.05Z"/></svg>
+          <span>自定义</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="showcase" aria-label="互动滑动变阻器">
+        <div class="studio-table" aria-hidden="true"></div>
+        <div class="light-pool" aria-hidden="true"></div>
+        <div class="device-scene" id="deviceScene">
+          <div class="device-shadow" aria-hidden="true"></div>
+          <div class="wood-base" aria-hidden="true">
+            <div class="wood-edge"></div>
+            <div class="brass-plaque">0—100 Ω&nbsp;&nbsp;·&nbsp;&nbsp;实验用</div>
+          </div>
+
+          <div class="apparatus" id="apparatus">
+            <div class="back-rail rail-top" aria-hidden="true"></div>
+            <div class="back-rail rail-bottom" aria-hidden="true"></div>
+            <div class="upright upright-left" aria-hidden="true"><i></i></div>
+            <div class="upright upright-right" aria-hidden="true"><i></i></div>
+
+            <div class="porcelain-depth" aria-hidden="true"></div>
+            <div class="porcelain-body">
+              <div class="body-rim rim-left" aria-hidden="true"></div>
+              <div class="body-rim rim-right" aria-hidden="true"></div>
+              <div class="scale scale-top" aria-hidden="true"></div>
+              <div class="scale scale-bottom" aria-hidden="true"></div>
+              <div class="top-copy" id="topCopy" aria-label="上方文案">
+                <span>梁神</span><span>梁圣</span><span>梁子</span><span>牢梁</span>
+              </div>
+              <div class="main-copy" id="mainCopy" aria-label="下方文案">
+                <span id="mainPrefix">滑动变</span><em id="mainAccent">租</em><span id="mainSuffix">器</span>
+              </div>
+              <div class="porcelain-shine" aria-hidden="true"></div>
+            </div>
+
+            <div class="end-cap cap-left" aria-hidden="true"><b></b></div>
+            <div class="end-cap cap-right" aria-hidden="true"><b></b></div>
+            <div class="front-rail" aria-hidden="true"></div>
+
+            <div class="foot foot-left" aria-hidden="true"><i></i></div>
+            <div class="foot foot-right" aria-hidden="true"><i></i></div>
+            <div class="terminal terminal-left" aria-hidden="true"><b></b></div>
+            <div class="terminal terminal-right" aria-hidden="true"><b></b></div>
+
+            <div class="slider-zone" id="sliderZone">
+              <div class="slider-guide" aria-hidden="true"></div>
+              <button
+                class="slider-handle"
+                id="sliderHandle"
+                type="button"
+                role="slider"
+                aria-label="调节变阻器"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="58"
+                aria-valuetext="58 欧姆"
+              >
+                <span class="knob-teeth" aria-hidden="true"></span>
+                <span class="avatar-ring"><img id="avatarImage" src="assets/avatar-default.jpg" alt="滑片头像" draggable="false" /></span>
+                <span class="wiper-stem" aria-hidden="true"><i></i></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="interaction-hint" id="interactionHint">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8 4 12l4 4M16 8l4 4-4 4M5 12h14"/></svg>
+          <span>拖动滑片 · 滚轮亦可调节</span>
+        </div>
+      </section>
+    </main>
+
+    <div class="panel-scrim" id="panelScrim" aria-hidden="true"></div>
+    <aside class="custom-panel" id="customPanel" aria-hidden="true" aria-label="自定义设置" inert>
+      <div class="panel-head">
+        <div><small>APPEARANCE</small><h2>自定义装置</h2></div>
+        <button class="close-button" id="closeButton" type="button" aria-label="关闭设置">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="panel-scroll">
+        <section class="avatar-editor">
+          <div class="avatar-preview"><img id="avatarPreview" src="assets/avatar-default.jpg" alt="头像预览" /></div>
+          <div><h3>滑片头像</h3><p>支持 JPG、PNG 或 WebP</p></div>
+          <label class="upload-button" for="avatarInput">上传</label>
+          <input id="avatarInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+        </section>
+
+        <section class="setting-group">
+          <div class="group-title"><span>上方刻度文案</span><small>用竖线分隔，最多四项</small></div>
+          <label class="field-label" for="topText">文案</label>
+          <input class="text-input" id="topText" type="text" maxlength="40" value="梁神 | 梁圣 | 梁子 | 牢梁" />
+          <div class="inline-fields">
+            <label class="color-field">颜色<input id="topColor" type="color" value="#171411" /></label>
+            <label class="range-field" for="topSize"><span>字号</span><output id="topSizeOutput">32</output><input id="topSize" type="range" min="18" max="46" value="32" /></label>
+          </div>
+        </section>
+
+        <section class="setting-group">
+          <div class="group-title"><span>主体文案</span><small>用 [ ] 标记强调字</small></div>
+          <label class="field-label" for="mainText">文案</label>
+          <input class="text-input" id="mainText" type="text" maxlength="16" value="滑动变[祖]器" />
+          <div class="inline-fields">
+            <label class="color-field">主色<input id="mainColor" type="color" value="#0e0c0a" /></label>
+            <label class="color-field">强调<input id="accentColor" type="color" value="#0874c9" /></label>
+          </div>
+          <label class="field-label" for="accentFont">强调字体</label>
+          <select class="text-input select-input" id="accentFont">
+            <option value="noto-sans-sc">思源黑体</option>
+            <option value="roboto-mono">等宽</option>
+            <option value="ma-shan-zheng">手写体</option>
+          </select>
+          <label class="range-field full-range" for="mainSize"><span>主体字号</span><output id="mainSizeOutput">62</output><input id="mainSize" type="range" min="38" max="88" value="62" /></label>
+          <label class="range-field full-range" for="accentSize"><span>强调字号</span><output id="accentSizeOutput">62</output><input id="accentSize" type="range" min="38" max="88" value="62" /></label>
+        </section>
+
+        <section class="setting-group compact-group">
+          <label class="toggle-row" for="soundToggle">
+            <span><b>机械滑动音</b><small>摩擦、齿轮与刻度碰撞反馈</small></span>
+            <input id="soundToggle" type="checkbox" checked /><i aria-hidden="true"></i>
+          </label>
+          <label class="range-field full-range volume-range" for="volume"><span>音量</span><output id="volumeOutput">55%</output><input id="volume" type="range" min="0" max="100" value="55" /></label>
+        </section>
+      </div>
+
+      <div class="panel-footer">
+        <button class="reset-button" id="resetButton" type="button">恢复默认</button>
+        <button class="done-button" id="doneButton" type="button">完成</button>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="assets/vendor/html-to-image.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
