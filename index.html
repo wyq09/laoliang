@@ -18,7 +18,8 @@
       </a>
       <div class="top-actions">
         <button class="save-button" id="saveButton" type="button">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
+          <svg class="save-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
+          <svg class="save-spinner" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
           <span>保存图片</span>
         </button>
         <button class="sound-button" id="soundButton" type="button" aria-pressed="true">
@@ -34,9 +35,45 @@
 
     <main class="workspace">
       <section class="showcase" aria-label="互动滑动变阻器">
+        <div class="capture-scene" id="captureScene">
         <div class="studio-table" aria-hidden="true"></div>
         <div class="light-pool" aria-hidden="true"></div>
-        <div class="device-scene" id="deviceScene">
+        <div class="device-stack" id="deviceStack">
+          <section class="price-monitor" id="priceMonitor" aria-labelledby="priceMonitorTitle">
+            <div class="price-monitor-head">
+              <div>
+                <div class="live-status" id="priceStatus"><i aria-hidden="true"></i><span>正在连接官方定价</span></div>
+                <h2 id="priceMonitorTitle">DeepSeek 实时价格</h2>
+              </div>
+              <button class="refresh-price" id="refreshPriceButton" type="button" aria-label="刷新模型价格">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
+              </button>
+            </div>
+
+            <div class="price-models" aria-live="polite">
+              <article class="price-model primary-model">
+                <div class="model-name"><span>主档位</span><code>deepseek-v4-flash</code></div>
+                <dl>
+                  <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="flashInputPrice">—</strong><small>元</small></dd></div>
+                  <div><dt>输出</dt><dd><strong id="flashOutputPrice">—</strong><small>元</small></dd></div>
+                </dl>
+              </article>
+              <article class="price-model">
+                <div class="model-name"><span>对照</span><code>deepseek-v4-pro</code></div>
+                <dl>
+                  <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="proInputPrice">—</strong><small>元</small></dd></div>
+                  <div><dt>输出</dt><dd><strong id="proOutputPrice">—</strong><small>元</small></dd></div>
+                </dl>
+              </article>
+            </div>
+
+            <div class="price-monitor-foot">
+              <p>当前档位 <strong id="currentTier">等待价格</strong><span>· 输入按缓存未命中 / 百万 tokens</span></p>
+              <a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/" target="_blank" rel="noopener noreferrer" id="priceUpdatedAt">官方定价页</a>
+            </div>
+          </section>
+
+          <div class="device-scene" id="deviceScene">
           <div class="device-shadow" aria-hidden="true"></div>
           <div class="wood-base" aria-hidden="true">
             <div class="wood-edge"></div>
@@ -94,39 +131,13 @@
           </div>
         </div>
 
-        <section class="price-monitor" id="priceMonitor" aria-labelledby="priceMonitorTitle">
-          <div class="price-monitor-head">
-            <div>
-              <div class="live-status" id="priceStatus"><i aria-hidden="true"></i><span>正在连接官方定价</span></div>
-              <h2 id="priceMonitorTitle">DeepSeek 实时价格</h2>
-            </div>
-            <button class="refresh-price" id="refreshPriceButton" type="button" aria-label="刷新模型价格">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
-            </button>
+          <div class="poster-qr" id="posterQr" aria-hidden="true">
+            <span class="poster-qr-img" id="posterQrImg"></span>
+            <span class="poster-qr-caption">扫码访问</span>
           </div>
-
-          <div class="price-models" aria-live="polite">
-            <article class="price-model primary-model">
-              <div class="model-name"><span>主档位</span><code>deepseek-v4-flash</code></div>
-              <dl>
-                <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="flashInputPrice">—</strong><small>元</small></dd></div>
-                <div><dt>输出</dt><dd><strong id="flashOutputPrice">—</strong><small>元</small></dd></div>
-              </dl>
-            </article>
-            <article class="price-model">
-              <div class="model-name"><span>对照</span><code>deepseek-v4-pro</code></div>
-              <dl>
-                <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="proInputPrice">—</strong><small>元</small></dd></div>
-                <div><dt>输出</dt><dd><strong id="proOutputPrice">—</strong><small>元</small></dd></div>
-              </dl>
-            </article>
-          </div>
-
-          <div class="price-monitor-foot">
-            <p>当前档位 <strong id="currentTier">等待价格</strong><span>· 输入按缓存未命中 / 百万 tokens</span></p>
-            <a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/" target="_blank" rel="noopener noreferrer" id="priceUpdatedAt">官方定价页</a>
-          </div>
-        </section>
+        </div>
+        </div>
+        </div>
 
         <div class="interaction-hint" id="interactionHint">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8 4 12l4 4M16 8l4 4-4 4M5 12h14"/></svg>
@@ -185,7 +196,7 @@
             <span><b>机械滑动音</b><small>摩擦、齿轮与刻度碰撞反馈</small></span>
             <input id="soundToggle" type="checkbox" checked /><i aria-hidden="true"></i>
           </label>
-          <label class="range-field full-range volume-range" for="volume"><span>音量</span><output id="volumeOutput">55%</output><input id="volume" type="range" min="0" max="100" value="55" /></label>
+          <label class="range-field full-range volume-range" for="volume"><span>音量</span><output id="volumeOutput">78%</output><input id="volume" type="range" min="0" max="100" value="78" /></label>
         </section>
       </div>
 
@@ -197,6 +208,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="assets/vendor/html-to-image.js"></script>
+    <script src="assets/vendor/qrcode.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

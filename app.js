@@ -3,6 +3,8 @@ const $ = (selector) => document.querySelector(selector);
 const elements = {
   root: document.documentElement,
   apparatus: $("#apparatus"),
+  captureScene: $("#captureScene"),
+  deviceStack: $("#deviceStack"),
   deviceScene: $("#deviceScene"),
   sliderZone: $("#sliderZone"),
   sliderHandle: $("#sliderHandle"),
@@ -47,6 +49,7 @@ const elements = {
   proOutputPrice: $("#proOutputPrice"),
   currentTier: $("#currentTier"),
   priceUpdatedAt: $("#priceUpdatedAt"),
+  posterQrImg: $("#posterQrImg"),
 };
 
 const accentFonts = {
@@ -66,7 +69,7 @@ const defaults = {
   mainSize: 62,
   accentSize: 62,
   sound: true,
-  volume: 55,
+  volume: 78,
   slider: 58,
   avatar: "assets/avatar-default.jpg",
 };
@@ -100,7 +103,7 @@ class MechanicalAudio {
     this.noiseSource = null;
     this.noiseGain = null;
     this.enabled = true;
-    this.volume = 0.55;
+    this.volume = 0.85;
   }
 
   ensure() {
@@ -159,7 +162,7 @@ class MechanicalAudio {
     if (!this.enabled) return;
     if (!this.noiseSource) this.startSlide();
     if (!this.noiseGain || !this.context) return;
-    const intensity = Math.min(0.18, 0.018 + Math.abs(speed) * 0.006);
+    const intensity = Math.min(0.42, 0.05 + Math.abs(speed) * 0.012);
     this.noiseGain.gain.setTargetAtTime(intensity, this.context.currentTime, 0.018);
   }
 
@@ -188,13 +191,13 @@ class MechanicalAudio {
     oscillator.type = "triangle";
     oscillator.frequency.setValueAtTime(155 + Math.random() * 22, now);
     oscillator.frequency.exponentialRampToValueAtTime(72, now + 0.045);
-    toneGain.gain.setValueAtTime(0.045 * strength, now);
+    toneGain.gain.setValueAtTime(0.13 * strength, now);
     toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.052);
     click.buffer = clickBuffer;
     filter.type = "bandpass";
     filter.frequency.value = 1250 + Math.random() * 350;
     filter.Q.value = 0.9;
-    clickGain.gain.value = 0.11 * strength;
+    clickGain.gain.value = 0.28 * strength;
     oscillator.connect(toneGain).connect(this.output);
     click.connect(filter).connect(clickGain).connect(this.output);
     oscillator.start(now);
@@ -222,6 +225,7 @@ function setSlider(value, options = {}) {
     if (tick % 5 === 0 && navigator.vibrate) navigator.vibrate(4);
   }
   lastTick = tick;
+  if (!options.skipTierUpdate) updateActiveTierHighlight(tierIndexForSlider(next));
   if (options.motion) {
     const direction = Math.sign(next - previous);
     elements.root.style.setProperty("--motion", String(direction * Math.min(2.2, Math.abs(next - previous) * 0.18)));
@@ -240,6 +244,33 @@ function sliderValueForTier(tierIndex) {
   const labelRect = targetLabel.getBoundingClientRect();
   if (!zoneRect.width) return [8, 37, 66, 94][tierIndex] ?? 50;
   return clamp((((labelRect.left + labelRect.width / 2) - zoneRect.left) / zoneRect.width) * 100);
+}
+
+function tierIndexForSlider(value) {
+  const labels = [...elements.topCopy.children];
+  if (!labels.length) return 0;
+  const positions = labels.map((_, index) => sliderValueForTier(index));
+  let closest = 0;
+  let minDistance = Infinity;
+  positions.forEach((position, index) => {
+    const distance = Math.abs(value - position);
+    if (distance < minDistance) {
+      minDistance = distance;
+      closest = index;
+    }
+  });
+  return closest;
+}
+
+function updateActiveTierHighlight(tierIndex) {
+  const tier = pricingConfig.tiers[tierIndex];
+  if (!tier) return;
+  activePriceTier = tierIndex;
+  elements.currentTier.textContent = tier.name;
+  elements.currentTier.dataset.tier = String(tierIndex);
+  [...elements.topCopy.children].forEach((label, index) => {
+    label.classList.toggle("price-active", index === tierIndex);
+  });
 }
 
 function animateSliderToTier(tierIndex) {
@@ -285,11 +316,6 @@ function renderPricing(payload) {
   elements.proOutputPrice.textContent = formatPrice(pro.output);
 
   const tierIndex = priceTierFor(flash.input);
-  const tier = pricingConfig.tiers[tierIndex];
-  activePriceTier = tierIndex;
-  elements.currentTier.textContent = tier.name;
-  elements.currentTier.dataset.tier = String(tierIndex);
-  [...elements.topCopy.children].forEach((label, index) => label.classList.toggle("price-active", index === tierIndex));
   animateSliderToTier(tierIndex);
 
   const updatedAt = new Date(payload.fetchedAt);
@@ -434,7 +460,6 @@ function renderState() {
     span.textContent = text;
     return span;
   }));
-  if (activePriceTier !== null) elements.topCopy.children[activePriceTier]?.classList.add("price-active");
   const main = parseMainText(state.mainText);
   elements.mainPrefix.textContent = main.prefix;
   elements.mainAccent.textContent = main.accent;
@@ -466,7 +491,7 @@ function renderState() {
   elements.volumeOutput.value = `${state.volume}%`;
   audio.setEnabled(state.sound);
   audio.setVolume(state.volume / 100);
-  setSlider(state.slider);
+  setSlider(state.slider, { skipTierUpdate: false });
   updateRangeFills();
 }
 
@@ -501,6 +526,20 @@ function exportFilename() {
   return `滑动变阻器-${stamp}.png`;
 }
 
+function buildPosterQr() {
+  try {
+    const qr = window.qrcode?.(0, "M");
+    if (!qr) return;
+    qr.addData(window.location.href);
+    qr.make();
+    elements.posterQrImg.innerHTML = qr.createSvgTag({
+      cellSize: 4,
+      margin: 0,
+      scalable: true,
+    });
+  } catch (_) { /* qrcode lib missing — skip silently */ }
+}
+
 async function saveDeviceImage() {
   if (elements.saveButton.disabled) return;
   if (typeof window.htmlToImage?.toBlob !== "function") return showToast("图片组件加载失败，请刷新后重试");
@@ -512,13 +551,14 @@ async function saveDeviceImage() {
   showToast("正在生成高清图片…");
   try {
     if (document.fonts?.ready) await document.fonts.ready;
-    elements.deviceScene.classList.add("capture-ready");
+    elements.captureScene.classList.add("capture-ready");
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const rect = elements.deviceScene.getBoundingClientRect();
+    const rect = elements.captureScene.getBoundingClientRect();
     const pixelRatio = Math.min(3.5, Math.max(2, 2400 / rect.width));
-    const blob = await window.htmlToImage.toBlob(elements.deviceScene, {
+    const blob = await window.htmlToImage.toBlob(elements.captureScene, {
       pixelRatio,
       cacheBust: true,
+      backgroundColor: "#100e0d",
     });
     if (!blob) throw new Error("Canvas export failed");
     const file = new File([blob], exportFilename(), { type: "image/png" });
@@ -540,7 +580,7 @@ async function saveDeviceImage() {
   } catch (error) {
     if (error?.name !== "AbortError") showToast("保存失败，请稍后重试");
   } finally {
-    elements.deviceScene.classList.remove("capture-ready");
+    elements.captureScene.classList.remove("capture-ready");
     elements.saveButton.disabled = false;
     elements.saveButton.classList.remove("saving");
   }
@@ -657,8 +697,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 window.addEventListener("resize", () => {
-  if (activePriceTier === null) setSlider(state.slider);
-  else requestAnimationFrame(() => setSlider(sliderValueForTier(activePriceTier)));
+  requestAnimationFrame(() => setSlider(state.slider));
 });
 
 elements.refreshPriceButton.addEventListener("click", () => fetchPricing({ announce: true }));
@@ -666,4 +705,5 @@ elements.refreshPriceButton.addEventListener("click", () => fetchPricing({ annou
 loadState();
 renderState();
 bindEditor();
+buildPosterQr();
 fetchPricing();
