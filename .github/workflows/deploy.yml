@@ -6,6 +6,9 @@
 #  需要的 Secrets (仓库 Settings → Secrets and variables → Actions):
 #   - DEPLOY_SSH_KEY   : 部署专用 SSH 私钥 (ed25519, 本地生成的那把)
 #   - SSH_HOST_KEY     : 服务器 host key (ssh-keyscan 输出, 见 deploy/README-DEPLOY.md)
+#   - DEPLOY_HOST      : 服务器 IP/域名 (必填, 不入仓库)
+#   - DEPLOY_USER      : SSH 用户 (可选, 默认 ubuntu)
+#   - SSH_PORT         : SSH 端口 (可选, 默认 22)
 #
 #  服务器侧准备见 deploy/README-DEPLOY.md, 已一次性配好。
 # ─────────────────────────────────────────────────────────────
@@ -52,12 +55,12 @@ jobs:
             --exclude='.playwright-cli' \
             -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }}" \
             ./ \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST || 'SERVER_IP' }}:/data/laoliang/
+            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }}:/data/laoliang/
 
       - name: Reload nginx on server
         run: |
           ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }} \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST || 'SERVER_IP' }} \
+            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }} \
             'sudo nginx -t && sudo systemctl reload nginx'
 
       - name: Verify deployment

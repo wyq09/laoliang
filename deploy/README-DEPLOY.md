@@ -34,7 +34,7 @@ CI/CD 需要在仓库 **Settings → Secrets and variables → Actions** 配置�
 |---|---|---|
 | `DEPLOY_SSH_KEY` | ✅ | 部署专用 SSH 私钥（ed25519，本地生成的那把，完整内容含 `-----BEGIN/END...-----`） |
 | `SSH_HOST_KEY` | ✅ | 服务器 host key，避免 CI 卡在 yes/no 确认。获取方式见下 |
-| `DEPLOY_HOST` | 可选 | 默认 `SERVER_IP` |
+| `DEPLOY_HOST` | ✅ | 服务器 IP/域名（不入仓库，必须配置） |
 | `DEPLOY_USER` | 可选 | 默认 `ubuntu` |
 | `SSH_PORT` | 可选 | 默认 `22` |
 
