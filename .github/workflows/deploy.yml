@@ -9,7 +9,7 @@
 #   - DEPLOY_SSH_KEY   : 部署专用 SSH 私钥 (ed25519, 本地生成的那把)
 #   - SSH_HOST_KEY     : 服务器 host key (ssh-keyscan 输出, 见 deploy/README-DEPLOY.md)
 #   - DEPLOY_HOST      : 服务器 IP/域名 (必填, 不入仓库)
-#   - DEPLOY_USER      : SSH 用户 (可选, 默认 ubuntu)
+#   - DEPLOY_USER      : 低权限部署用户 (必填, 不使用管理员账户)
 #   - SSH_PORT         : SSH 端口 (可选, 默认 22)
 #
 #  服务器侧准备见 deploy/README-DEPLOY.md, 已一次性配好。
@@ -27,6 +27,9 @@ concurrency:
   group: deploy-laoliang
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -34,10 +37,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "20"
 
@@ -57,26 +60,32 @@ jobs:
       - name: Validate deployment configuration
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           SSH_HOST_KEY: ${{ secrets.SSH_HOST_KEY }}
         run: |
           test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST Secret 未配置"; exit 1; }
+          test -n "$DEPLOY_USER" || { echo "DEPLOY_USER Secret 未配置"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY Secret 未配置"; exit 1; }
           test -n "$SSH_HOST_KEY" || { echo "SSH_HOST_KEY Secret 未配置"; exit 1; }
 
       - name: Install SSH key & known_hosts
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_HOST_KEY: ${{ secrets.SSH_HOST_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          # 私钥
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          # host key (避免交互式 yes/no)
-          echo "${{ secrets.SSH_HOST_KEY }}" > ~/.ssh/known_hosts
+          install -d -m 700 ~/.ssh
+          install -m 600 /dev/null ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Sync website to server
         if: github.event_name != 'schedule'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
         run: |
           rsync -avz --delete \
             --exclude='.git' \
@@ -89,27 +98,35 @@ jobs:
             --exclude='scripts' \
             --exclude='server.js' \
             --exclude='server.test.js' \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }}" \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o BatchMode=yes -o StrictHostKeyChecking=yes" \
             ./ \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }}:/data/laoliang/
+            "$DEPLOY_USER@$DEPLOY_HOST:/data/laoliang/"
 
       - name: Sync latest pricing only
         if: github.event_name == 'schedule'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }} \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }} \
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
             'mkdir -p /data/laoliang/api'
           rsync -avz --delete \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }}" \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o BatchMode=yes -o StrictHostKeyChecking=yes" \
             api/ \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }}:/data/laoliang/api/
+            "$DEPLOY_USER@$DEPLOY_HOST:/data/laoliang/api/"
 
       - name: Reload nginx
         if: github.event_name != 'schedule'
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || '22' }} \
-            ${{ secrets.DEPLOY_USER || 'ubuntu' }}@${{ secrets.DEPLOY_HOST }} \
-            'sudo nginx -t && sudo systemctl reload nginx'
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            'sudo /usr/sbin/nginx -t && sudo /usr/bin/systemctl reload nginx'
 
       - name: Verify deployment
         run: |
@@ -126,3 +143,7 @@ jobs:
             if (![flash?.input, flash?.output, pro?.input, pro?.output].every(Number.isFinite)) process.exit(1);
             console.log(`线上验证通过：Flash ${flash.input}/${flash.output}，Pro ${pro.input}/${pro.output}`);
           '
+
+      - name: Remove temporary SSH credentials
+        if: always()
+        run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts
