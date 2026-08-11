@@ -9,6 +9,7 @@ id_rsa*
 known_hosts
 .zcode/
 
-# 部署配置 (本地保留, 不入仓库 — 含服务器地址/脚本/Credentials 说明)
-.github/workflows/
+# 部署文档与服务器侧脚本 (本地保留, 不入仓库)
+# 注意: .github/workflows/deploy.yml 需要入仓库以驱动 CI, 它不含任何敏感信息
+#       (所有真实值走 GitHub Secrets), 切勿在此忽略整个 workflows 目录。
 deploy/
