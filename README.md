@@ -49,12 +49,3 @@ python3 -m http.server 8080
 ## 小小声明
 
 本项目是基于网络流行梗制作的互动玩具，只负责整活和催更，与 DeepSeek 及梁文锋本人没有关联。
-
-## 部署
-
-线上地址：<https://laoliang.youyongai.com>
-
-- push 到 `main` 分支 → GitHub Actions 自动 rsync 到服务器并 reload nginx
-- 服务器：`SERVER_IP`，部署目录 `/data/laoliang`
-- HTTPS：Let's Encrypt 证书，`certbot.timer` 自动续期，续期后自动 reload nginx
-- CI/CD 配置与 Secrets、手动部署、排障等详见 [deploy/README-DEPLOY.md](deploy/README-DEPLOY.md)
