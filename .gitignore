@@ -8,3 +8,7 @@ output/
 id_rsa*
 known_hosts
 .zcode/
+
+# 部署配置 (本地保留, 不入仓库 — 含服务器地址/脚本/Credentials 说明)
+.github/workflows/
+deploy/
