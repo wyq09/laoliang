@@ -45,6 +45,13 @@ jobs:
       - name: Fetch official pricing
         run: node scripts/update-pricing.js
 
+      - name: Inject build hash for cache busting
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "Injecting build hash: $SHORT_SHA"
+          sed -i "s/__BUILD_HASH__/$SHORT_SHA/g" index.html
+          grep -q "$SHORT_SHA" index.html && echo "✓ index.html 已注入版本指纹"
+
       - name: Validate deployment configuration
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}

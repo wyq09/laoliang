@@ -53,9 +53,9 @@ const elements = {
 };
 
 const accentFonts = {
-  "noto-sans-sc": '"Noto Sans SC", sans-serif',
-  "roboto-mono": '"Roboto Mono", monospace',
-  "ma-shan-zheng": '"Ma Shan Zheng", cursive',
+  "noto-sans-sc": '"PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif',
+  "roboto-mono": 'ui-monospace, "SF Mono", "Roboto Mono", Menlo, Consolas, monospace',
+  "ma-shan-zheng": '"Kaiti SC", "KaiTi", "STKaiti", "楷体", cursive',
 };
 
 const defaults = {
