@@ -38,6 +38,15 @@ const elements = {
   volume: $("#volume"),
   volumeOutput: $("#volumeOutput"),
   toast: $("#toast"),
+  priceMonitor: $("#priceMonitor"),
+  priceStatus: $("#priceStatus"),
+  refreshPriceButton: $("#refreshPriceButton"),
+  flashInputPrice: $("#flashInputPrice"),
+  flashOutputPrice: $("#flashOutputPrice"),
+  proInputPrice: $("#proInputPrice"),
+  proOutputPrice: $("#proOutputPrice"),
+  currentTier: $("#currentTier"),
+  priceUpdatedAt: $("#priceUpdatedAt"),
 };
 
 const accentFonts = {
@@ -50,7 +59,7 @@ const defaults = {
   topText: "梁神 | 梁圣 | 梁子 | 牢梁",
   topColor: "#171411",
   topSize: 32,
-  mainText: "滑动变[租]器",
+  mainText: "滑动变[祖]器",
   mainColor: "#0e0c0a",
   accentColor: "#0874c9",
   accentFont: "noto-sans-sc",
@@ -69,6 +78,20 @@ let inertiaFrame = null;
 let toastTimer = null;
 let wheelTimer = null;
 let lastTick = Math.round(state.slider);
+let activePriceTier = null;
+let automaticSlideFrame = null;
+let priceRefreshTimer = null;
+
+const pricingConfig = {
+  endpoint: "/api/pricing.json",
+  refreshInterval: 5 * 60 * 1000,
+  tiers: [
+    { name: "梁神", ceiling: 1 },
+    { name: "梁圣", ceiling: 2 },
+    { name: "梁子", ceiling: 3 },
+    { name: "牢梁", ceiling: Infinity },
+  ],
+};
 
 class MechanicalAudio {
   constructor() {
@@ -205,6 +228,100 @@ function setSlider(value, options = {}) {
   }
 }
 
+function priceTierFor(inputPrice) {
+  return pricingConfig.tiers.findIndex((tier) => inputPrice <= tier.ceiling);
+}
+
+function sliderValueForTier(tierIndex) {
+  const labels = [...elements.topCopy.children];
+  const targetLabel = labels[tierIndex];
+  if (!targetLabel) return [8, 37, 66, 94][tierIndex] ?? 50;
+  const zoneRect = elements.sliderZone.getBoundingClientRect();
+  const labelRect = targetLabel.getBoundingClientRect();
+  if (!zoneRect.width) return [8, 37, 66, 94][tierIndex] ?? 50;
+  return clamp((((labelRect.left + labelRect.width / 2) - zoneRect.left) / zoneRect.width) * 100);
+}
+
+function animateSliderToTier(tierIndex) {
+  cancelAnimationFrame(automaticSlideFrame);
+  const start = state.slider;
+  const target = sliderValueForTier(tierIndex);
+  const duration = 900;
+  const startedAt = performance.now();
+  const frame = (now) => {
+    const progress = clamp((now - startedAt) / duration, 0, 1);
+    const eased = 1 - Math.pow(1 - progress, 4);
+    setSlider(start + (target - start) * eased, { motion: true });
+    if (progress < 1) {
+      automaticSlideFrame = requestAnimationFrame(frame);
+    } else {
+      setSlider(target);
+      saveState();
+    }
+  };
+  automaticSlideFrame = requestAnimationFrame(frame);
+}
+
+function formatPrice(value) {
+  return Number.isFinite(value) ? new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 4 }).format(value) : "—";
+}
+
+function updatePriceStatus(status, message) {
+  elements.priceMonitor.dataset.status = status;
+  elements.priceStatus.querySelector("span").textContent = message;
+  elements.refreshPriceButton.disabled = status === "loading";
+}
+
+function renderPricing(payload) {
+  const flash = payload.models?.["deepseek-v4-flash"];
+  const pro = payload.models?.["deepseek-v4-pro"];
+  if (![flash?.input, flash?.output, pro?.input, pro?.output].every(Number.isFinite)) {
+    throw new Error("定价数据不完整");
+  }
+
+  elements.flashInputPrice.textContent = formatPrice(flash.input);
+  elements.flashOutputPrice.textContent = formatPrice(flash.output);
+  elements.proInputPrice.textContent = formatPrice(pro.input);
+  elements.proOutputPrice.textContent = formatPrice(pro.output);
+
+  const tierIndex = priceTierFor(flash.input);
+  const tier = pricingConfig.tiers[tierIndex];
+  activePriceTier = tierIndex;
+  elements.currentTier.textContent = tier.name;
+  elements.currentTier.dataset.tier = String(tierIndex);
+  [...elements.topCopy.children].forEach((label, index) => label.classList.toggle("price-active", index === tierIndex));
+  animateSliderToTier(tierIndex);
+
+  const updatedAt = new Date(payload.fetchedAt);
+  elements.priceUpdatedAt.textContent = Number.isNaN(updatedAt.getTime())
+    ? "查看官方定价"
+    : `${updatedAt.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })} 更新`;
+  updatePriceStatus("live", "官方价格已同步");
+  elements.priceMonitor.classList.remove("price-entering");
+  requestAnimationFrame(() => elements.priceMonitor.classList.add("price-entering"));
+}
+
+async function fetchPricing({ announce = false } = {}) {
+  updatePriceStatus("loading", "正在连接官方定价");
+  try {
+    const response = await fetch(`${pricingConfig.endpoint}?t=${Date.now()}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(payload?.error || `价格接口异常（${response.status}）`);
+    renderPricing(payload);
+    if (announce) showToast("价格已刷新，滑片已同步");
+  } catch (error) {
+    updatePriceStatus("error", "价格同步失败");
+    elements.currentTier.textContent = activePriceTier === null ? "暂时不可用" : pricingConfig.tiers[activePriceTier].name;
+    if (announce) showToast(error.message || "价格获取失败，请稍后重试");
+  } finally {
+    window.clearTimeout(priceRefreshTimer);
+    priceRefreshTimer = window.setTimeout(fetchPricing, pricingConfig.refreshInterval);
+  }
+}
+
 function valueFromPointer(clientX) {
   const rect = elements.sliderZone.getBoundingClientRect();
   return clamp(((clientX - rect.left) / rect.width) * 100);
@@ -212,6 +329,7 @@ function valueFromPointer(clientX) {
 
 function beginInteraction() {
   cancelAnimationFrame(inertiaFrame);
+  cancelAnimationFrame(automaticSlideFrame);
   elements.hint.classList.add("used");
   elements.root.style.setProperty("--press", "1");
   audio.startSlide();
@@ -316,6 +434,7 @@ function renderState() {
     span.textContent = text;
     return span;
   }));
+  if (activePriceTier !== null) elements.topCopy.children[activePriceTier]?.classList.add("price-active");
   const main = parseMainText(state.mainText);
   elements.mainPrefix.textContent = main.prefix;
   elements.mainAccent.textContent = main.accent;
@@ -537,8 +656,14 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && elements.panel.classList.contains("open")) closePanel();
 });
 
-window.addEventListener("resize", () => setSlider(state.slider));
+window.addEventListener("resize", () => {
+  if (activePriceTier === null) setSlider(state.slider);
+  else requestAnimationFrame(() => setSlider(sliderValueForTier(activePriceTier)));
+});
+
+elements.refreshPriceButton.addEventListener("click", () => fetchPricing({ announce: true }));
 
 loadState();
 renderState();
 bindEditor();
+fetchPricing();

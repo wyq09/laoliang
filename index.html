@@ -94,6 +94,40 @@
           </div>
         </div>
 
+        <section class="price-monitor" id="priceMonitor" aria-labelledby="priceMonitorTitle">
+          <div class="price-monitor-head">
+            <div>
+              <div class="live-status" id="priceStatus"><i aria-hidden="true"></i><span>正在连接官方定价</span></div>
+              <h2 id="priceMonitorTitle">DeepSeek 实时价格</h2>
+            </div>
+            <button class="refresh-price" id="refreshPriceButton" type="button" aria-label="刷新模型价格">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg>
+            </button>
+          </div>
+
+          <div class="price-models" aria-live="polite">
+            <article class="price-model primary-model">
+              <div class="model-name"><span>主档位</span><code>deepseek-v4-flash</code></div>
+              <dl>
+                <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="flashInputPrice">—</strong><small>元</small></dd></div>
+                <div><dt>输出</dt><dd><strong id="flashOutputPrice">—</strong><small>元</small></dd></div>
+              </dl>
+            </article>
+            <article class="price-model">
+              <div class="model-name"><span>对照</span><code>deepseek-v4-pro</code></div>
+              <dl>
+                <div><dt title="缓存未命中输入">输入*</dt><dd><strong id="proInputPrice">—</strong><small>元</small></dd></div>
+                <div><dt>输出</dt><dd><strong id="proOutputPrice">—</strong><small>元</small></dd></div>
+              </dl>
+            </article>
+          </div>
+
+          <div class="price-monitor-foot">
+            <p>当前档位 <strong id="currentTier">等待价格</strong><span>· 输入按缓存未命中 / 百万 tokens</span></p>
+            <a href="https://api-docs.deepseek.com/zh-cn/quick_start/pricing/" target="_blank" rel="noopener noreferrer" id="priceUpdatedAt">官方定价页</a>
+          </div>
+        </section>
+
         <div class="interaction-hint" id="interactionHint">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8 4 12l4 4M16 8l4 4-4 4M5 12h14"/></svg>
           <span>拖动滑片 · 滚轮亦可调节</span>
