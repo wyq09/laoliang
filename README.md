@@ -58,13 +58,11 @@ node server.js
 
 ## 线上部署
 
-线上服务器保持纯 Nginx 静态托管，不需要安装 Node.js、npm、Playwright 或浏览器。GitHub Actions 会在以下时机抓取官方定价并生成 `api/pricing.json`：
+线上服务器保持纯 Nginx 静态托管，不需要安装 Node.js、npm、Playwright 或浏览器。
 
-- 推送到 `main` 时部署完整站点
-- 手动触发工作流时部署完整站点
-- 每 5 分钟只同步最新价格文件
+**站点部署（GitHub Actions）**：推送到 `main` 或手动触发工作流时部署完整站点。工作流先跑解析测试，再抓一次官方定价生成 `api/pricing.json` 随站点一起发布，最后从线上地址验证页面标识和两个模型的四项价格。
 
-工作流会先执行解析测试，部署后再从线上地址验证页面标识和两个模型的四项价格。
+**实时价格刷新（服务器 systemd timer）**：真正让价格"每 5 分钟更新一次"的是服务器上的 `laoliang-pricing.timer`，它每 5 分钟拉取 DeepSeek 官方定价页并原子写入 `api/pricing.json`。GitHub Actions 不再跑定时任务（公开仓库的 schedule 触发不可靠，且与服务器 timer 冗余）。
 
 运行解析测试：
 
